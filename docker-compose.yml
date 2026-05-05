@@ -7,7 +7,7 @@ services:
   # ── PostgreSQL database ──────────────────────────────────────────────────────
   db:
     image: postgres:16-alpine
-    container_name: tracker-db
+    container_name: stride-db
     environment:
       POSTGRES_DB:       ${DB_NAME}
       POSTGRES_USER:     ${DB_USER}
@@ -28,7 +28,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: tracker-backend
+    container_name: stride-backend
     depends_on:
       db:
         condition: service_healthy   # Backend only starts after DB passes health check

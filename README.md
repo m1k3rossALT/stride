@@ -1,4 +1,4 @@
-# Daily Progress Tracker
+# stride
 
 A lightweight, self-hosted daily habit tracker.
 Users define their own habits and check them off each day.
