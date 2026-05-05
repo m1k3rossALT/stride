@@ -1,0 +1,35 @@
+# ── Secrets ───────────────────────────────────────────────────
+.env
+
+# ── Java / Maven ──────────────────────────────────────────────
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+
+# ── IDE ───────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# ── Node / React ──────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.production
+
+# ── Docker ────────────────────────────────────────────────────
+# Keep docker-compose.yml but ignore override files with secrets
+docker-compose.override.yml
+
+# ── Logs ──────────────────────────────────────────────────────
+logs/
+*.log

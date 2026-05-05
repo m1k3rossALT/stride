@@ -1,0 +1,80 @@
+version: '3.9'
+
+# ── Services ──────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL database ──────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: tracker-db
+    environment:
+      POSTGRES_DB:       ${DB_NAME}
+      POSTGRES_USER:     ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"           # Exposed for local DB tools (DBeaver, pgAdmin etc.)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Spring Boot backend ──────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tracker-backend
+    depends_on:
+      db:
+        condition: service_healthy   # Backend only starts after DB passes health check
+    environment:
+      # Database
+      DB_HOST:     db               # Service name is the hostname inside Docker network
+      DB_PORT:     5432
+      DB_NAME:     ${DB_NAME}
+      DB_USER:     ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # JWT
+      JWT_SECRET:      ${JWT_SECRET}
+      JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-24}
+
+      # Logging — override any of these for verbose mode (no rebuild required)
+      LOG_LEVEL_ROOT:     ${LOG_LEVEL_ROOT:-INFO}
+      LOG_LEVEL_APP:      ${LOG_LEVEL_APP:-INFO}
+      LOG_LEVEL_WEB:      ${LOG_LEVEL_WEB:-INFO}
+      LOG_LEVEL_SECURITY: ${LOG_LEVEL_SECURITY:-INFO}
+      LOG_LEVEL_SQL:      ${LOG_LEVEL_SQL:-OFF}
+      LOG_LEVEL_SQL_BIND: ${LOG_LEVEL_SQL_BIND:-OFF}
+      LOG_LEVEL_FLYWAY:   ${LOG_LEVEL_FLYWAY:-INFO}
+
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend_logs:/logs         # Persist logs outside the container
+    restart: unless-stopped
+
+  # ── React frontend (scaffold — wired up in Step 6) ───────────────────────────
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: tracker-frontend
+  #   depends_on:
+  #     - backend
+  #   environment:
+  #     VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+  #   ports:
+  #     - "5173:5173"
+  #   restart: unless-stopped
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+
+volumes:
+  postgres_data:    # DB data persists across container restarts
+  backend_logs:     # App logs persisted outside the container
